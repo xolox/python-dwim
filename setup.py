@@ -3,12 +3,24 @@
 # Setup script for the `dwim' package.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: October 19, 2014
+# Last Change: November 1, 2014
 # URL: https://github.com/xolox/python-dwim
 
 import os
-import setuptools
 import re
+import setuptools
+import sys
+
+# External dependencies.
+install_requires = [
+    'coloredlogs >= 0.8',
+    'executor >= 1.6',
+    'verboselogs >= 1.0.1',
+]
+
+# External dependency on Python < 3.4.
+if sys.version_info[:2] < (3, 4):
+    install_requires.append('flufl.enum >= 4.0.1')
 
 def get_contents(filename):
     """Get the contents of a file relative to the source distribution directory."""
@@ -32,13 +44,9 @@ setuptools.setup(
     author_email='peter@peterodding.com',
     packages=setuptools.find_packages(),
     entry_points=dict(console_scripts=['dwim = dwim:main']),
-    install_requires=[
-        'coloredlogs >= 0.8',
-        'executor >= 1.6',
-        'verboselogs >= 1.0.1',
-    ],
+    install_requires=install_requires,
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',

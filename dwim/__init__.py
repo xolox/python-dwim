@@ -1,7 +1,7 @@
 # dwim: Location aware application launcher.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: October 19, 2014
+# Last Change: November 1, 2014
 # URL: https://github.com/xolox/python-dwim
 
 # Standard library modules.
@@ -14,12 +14,18 @@ import sys
 import time
 
 # Semi-standard module versioning.
-__version__ = '0.1'
+__version__ = '0.2'
 
 # External dependencies.
 import coloredlogs
 from executor import execute, which, quote
 from verboselogs import VerboseLogger
+
+# Python 2.x / 3.x compatibility.
+try:
+    from enum import Enum
+except ImportError:
+    from flufl.enum import Enum
 
 # Initialize a logger for this module.
 logger = VerboseLogger(__name__)
@@ -55,6 +61,7 @@ def main():
         environment = dict(__file__=filename,
                            __name__='dwimrc',
                            launch_program=launch_program,
+                           LaunchStatus=LaunchStatus,
                            set_random_background=set_random_background,
                            wait_for_internet_connection=wait_for_internet_connection)
         logger.info("Loading %s ..", filename)
@@ -102,6 +109,7 @@ def launch_program(command, is_running=None):
     :param command: The shell command used to launch the application (a string).
     :param is_running: The shell command used to check whether the application
                        is already running (a string, optional).
+    :returns: One of the values from the :py:class:`LaunchStatus` enumeration.
 
     Examples of custom "is running" checks:
 
@@ -123,11 +131,48 @@ def launch_program(command, is_running=None):
         logger.verbose("Checking if program is running (%s) ..", pathname)
         if execute(is_running, silent=True, check=False):
             logger.info("Command already running: %s", command)
+            return LaunchStatus.already_running
         else:
             logger.info("Starting command: %s", command)
             execute('sh', '-c', '(%s >/dev/null 2>&1) &' % command)
+            return LaunchStatus.started
+    except MissingProgramError:
+        logger.warning("Program not installed! (%s)", command)
+        return LaunchStatus.not_installed
     except Exception as e:
         logger.warning("Failed to start program! (%s)", e)
+        return LaunchStatus.unspecified_error
+
+class LaunchStatus(Enum):
+
+    """
+    The :py:class:`LaunchStatus` enumeration defines the possible results of
+    :py:func:`launch_program()`. It enables the caller to handle the possible
+    results when they choose to do so, without forcing them to handle
+    exceptions.
+
+    .. data:: started
+
+    The program wasn't running before but has just been started.
+
+    .. data:: already_running
+
+    The program was already running.
+
+    .. data:: not_installed
+
+    The program is not installed / available on the ``$PATH``.
+
+    .. data:: unspecified_error
+
+    Any other type of error, e.g. the command line given to
+    :py:func:`launch_program()` can't be parsed.
+    """
+
+    started = 1
+    already_running = 2
+    not_installed = 3
+    unspecified_error = 4
 
 def extract_program(command_line):
     """

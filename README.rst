@@ -131,29 +131,31 @@ provide some interesting examples of things you can do:
 
 .. code-block:: python
 
+   # vim: fileencoding=utf-8
+
    # ~/.dwimrc: Profile for dwim, my location aware application launcher.
    # For more information please see https://github.com/xolox/python-dwim/.
 
    # Standard library modules.
    import os
-   import sys
    import time
 
    # Packages provided by dwim and its dependencies.
    from executor import execute
-   from dwim import (determine_network_location, launch_program,
+   from dwim import (determine_network_location, launch_program, LaunchStatus
                      set_random_background, wait_for_internet_connection)
 
    # This is required for graphical Vim and gnome-terminal to have nicely
    # anti-aliased fonts. See http://awesome.naquadah.org/wiki/Autostart.
-   launch_program('gnome-settings-daemon')
+   if launch_program('gnome-settings-daemon') == LaunchStatus.started:
 
-   # Give my desktop environment / window manager (Awesome) a moment to fully
-   # initialize. Without this on the first run some programs never end up adding
-   # their icon to the notification area / system tray / whatever you want to call
-   # it, which is kind of awkward. If standard input is connected to a terminal
-   # we're being run interactively so there's no point in waiting.
-   if not sys.stderr.isatty():
+       # When my window manager is initially started I need to wait for a moment
+       # before launching user programs because otherwise strange things can
+       # happen, for example programs that place an icon in the notification area
+       # might be started in the background without adding the icon, so there's
+       # no way to access the program but `dwim' will never restart the program
+       # because it's already running! ಠ_ಠ
+       logger.debug("Sleeping for 10 seconds to give Awesome a moment to initialize ..")
        time.sleep(10)
 
    # Determine the physical location of this computer by matching the MAC address
