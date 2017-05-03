@@ -31,6 +31,7 @@ except ImportError:
 logger = VerboseLogger(__name__)
 execute = functools.partial(execute, logger=logger)
 
+
 def main():
     """Command line interface for the ``dwim`` program."""
     # Initialize logging to the terminal.
@@ -39,7 +40,7 @@ def main():
     profile = '~/.dwimrc'
     # Parse the command line arguments.
     try:
-        options, arguments = getopt.getopt(sys.argv[1:], 'c:vqh', ['config=', 'verbose', 'quiet', 'help'])
+        options, _ = getopt.getopt(sys.argv[1:], 'c:vqh', ['config=', 'verbose', 'quiet', 'help'])
         for option, value in options:
             if option in ('-c', '--config'):
                 profile = value
@@ -70,6 +71,7 @@ def main():
         logger.exception("Caught a fatal exception! Terminating ..")
         sys.exit(1)
 
+
 def usage():
     """Print a user friendly usage message to the terminal."""
     print("""
@@ -97,6 +99,7 @@ Supported options:
   -q, --quiet        make less noise
   -h, --help         show this message and exit
 """.strip())
+
 
 def launch_program(command, is_running=None):
     """
@@ -143,6 +146,7 @@ def launch_program(command, is_running=None):
         logger.warning("Failed to start program! (%s)", e)
         return LaunchStatus.unspecified_error
 
+
 class LaunchStatus(Enum):
 
     """
@@ -174,6 +178,7 @@ class LaunchStatus(Enum):
     not_installed = 3
     unspecified_error = 4
 
+
 def extract_program(command_line):
     """
     Parse a simple shell command to extract the program name.
@@ -195,6 +200,7 @@ def extract_program(command_line):
         raise CommandParseError("Failed to parse command line! (%r)" % command_line)
     logger.debug("Extracting program name from parsed command line: %s", tokens)
     return tokens[0]
+
 
 def resolve_program(executable):
     """
@@ -226,6 +232,7 @@ def resolve_program(executable):
             raise MissingProgramError("Program not found! (%s)" % executable)
     return executable
 
+
 def set_random_background(command, directory):
     """
     Set a random desktop wallpaper / background.
@@ -246,6 +253,7 @@ def set_random_background(command, directory):
     selected_background = random.choice(backgrounds)
     logger.info("Selected random background: %s", selected_background)
     execute(command.format(image=quote(selected_background)))
+
 
 def determine_network_location(**gateways):
     """
@@ -278,6 +286,7 @@ def determine_network_location(**gateways):
             return network_name
     logger.info("We're not connected to a known network (unknown gateway MAC address %s).", current_gateway_mac)
 
+
 def find_gateway_address():
     """
     Find the IP address of the current gateway using the ``ip route`` command.
@@ -297,6 +306,7 @@ def find_gateway_address():
             ip_address = tokens[2]
             logger.verbose("Found gateway IP address: %s", ip_address)
             return ip_address
+
 
 def find_gateway_mac():
     """
@@ -322,6 +332,7 @@ def find_gateway_mac():
                 logger.verbose("Found gateway MAC address: %s", mac_address)
                 return mac_address
 
+
 def wait_for_internet_connection():
     """
     Wait for an active internet connection.
@@ -336,11 +347,14 @@ def wait_for_internet_connection():
         time.sleep(1)
     logger.info("Internet connection is ready.")
 
+
 class ProgramError(Exception):
     """Super class for exceptions raised in :py:func:`launch_program()`."""
 
+
 class CommandParseError(ProgramError):
     """Raised by :py:func:`extract_program()` when a program doesn't exist."""
+
 
 class MissingProgramError(ProgramError):
     """Raised by :py:func:`resolve_program()` when a program doesn't exist."""
