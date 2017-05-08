@@ -255,5 +255,5 @@ This software is licensed under the `MIT license`_.
 .. _Pidgin: http://en.wikipedia.org/wiki/Pidgin_(software)
 .. _PyPI: https://pypi.python.org/pypi/dwim
 .. _Python: http://en.wikipedia.org/wiki/Python_(programming_language)
-.. _Read the Docs: https://dwim.readthedocs.org/en/latest/
-.. _the documentation: https://dwim.readthedocs.org/en/latest/#function-reference
+.. _Read the Docs: https://dwim.readthedocs.io/en/latest/
+.. _the documentation: https://dwim.readthedocs.io/en/latest/#function-reference

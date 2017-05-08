@@ -1,8 +1,8 @@
 # Makefile for `dwim'.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: October 19, 2014
-# URL: https://github.com/xolox/python-dwim
+# Last Change: May 8, 2017
+# URL: https://dwim.readthedocs.io
 
 WORKON_HOME ?= $(HOME)/.virtualenvs
 VIRTUAL_ENV ?= $(WORKON_HOME)/dwim

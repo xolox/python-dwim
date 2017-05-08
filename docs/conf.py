@@ -1,8 +1,8 @@
 # dwim: Location aware application launcher.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: October 19, 2014
-# URL: https://github.com/xolox/python-dwim
+# Last Change: May 8, 2017
+# URL: https://dwim.readthedocs.io
 #
 # This is the Sphinx configuration file to generate documentation for the
 # `dwim' Python package.

@@ -1,8 +1,8 @@
 # dwim: Location aware application launcher.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: November 1, 2014
-# URL: https://github.com/xolox/python-dwim
+# Last Change: May 8, 2017
+# URL: https://dwim.readthedocs.io
 
 # Standard library modules.
 import functools
