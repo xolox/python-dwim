@@ -157,7 +157,7 @@ your current gateway's MAC address. This saves me from having to document the
 shell commands needed to do the same thing :-). Run the ``dwim`` command and
 take note of a line that looks like this:
 
-.. code-block:: none
+.. code-block:: text
 
    We're not connected to a known network (unknown gateway MAC address 84:9c:a6:76:23:8e).
 
@@ -169,7 +169,7 @@ Now edit your profile and change the line you just added:
 
 When you now rerun ``dwim`` it will say:
 
-.. code-block:: none
+.. code-block:: text
 
    We're connected to the home network.
 
