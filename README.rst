@@ -16,18 +16,78 @@ will not start duplicate instances of your applications, but when you quit an
 application and then rerun ``dwim`` the application will be started again.
 
 .. contents::
+   :local:
+   :depth: 2
 
-Getting started
----------------
+Installation
+------------
 
-To get started you install the ``dwim`` package from PyPI_:
+The `dwim` package is available on PyPI_ which means installation should be as
+simple as:
 
-.. code-block:: bash
+.. code-block:: sh
 
    $ pip install dwim
 
-After installation you have access to the ``dwim`` program. Before you can use
-the program you need to create a profile, see the following section.
+There's actually a multitude of ways to install Python packages (e.g. the `per
+user site-packages directory`_, `virtual environments`_ or just installing
+system wide) and I have no intention of getting into that discussion here, so
+if this intimidates you then read up on your options before returning to these
+instructions ;-).
+
+Usage
+-----
+
+There are two ways to use the `dwim` package: As the command line program
+``dwim`` and as a Python API. For details about the Python API please refer to
+the API documentation available on `Read the Docs`_. The command line interface
+is described below.
+
+Please note that you need to `create a profile`_ (see below) before you can use
+the program.
+
+Command line interface
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. A DRY solution to avoid duplication of the `dwim --help' text:
+..
+.. [[[cog
+.. from humanfriendly.usage import inject_usage
+.. inject_usage('dwim.cli')
+.. ]]]
+
+**Usage:** `dwim [OPTIONS]`
+
+The dwim program is a location aware application launcher. To use it you are
+required to create a profile at ~/.dwimrc. This profile is a simple Python
+script that defines which applications you want to start automatically, in
+which order the applications should start and whether some applications
+should only be started given a specific physical location.
+
+The location awareness works by checking the MAC address of your gateway
+(the device on your network that connects you to the outside world, usually
+a router) to a set of known MAC addresses that you define in ~/.dwimrc.
+
+Every time you run the dwim program your ~/.dwimrc profile is evaluated and
+your applications are started automatically. If you run dwim again it will
+not start duplicate instances of your applications, but when you quit an
+application and then rerun dwim the application will be started again.
+
+**Supported options:**
+
+.. csv-table::
+   :header: Option, Description
+   :widths: 30, 70
+
+
+   "``-c``, ``--config=FILE``",Override the default location of the profile script.
+   "``-v``, ``--verbose``",Increase logging verbosity (can be repeated).
+   "``-q``, ``--quiet``",Decrease logging verbosity (can be repeated).
+   "``-h``, ``--help``",Show this message and exit.
+
+.. [[[end]]]
+
+.. _create a profile:
 
 Creating a profile
 ~~~~~~~~~~~~~~~~~~
@@ -39,6 +99,9 @@ applications should only be started on a specific physical location. The
 profile script has access to functions provided by the ``dwim`` Python package.
 Please refer to `the documentation`_ for the available functions. The examples
 below show the most useful functions.
+
+.. contents::
+   :local:
 
 Starting your first program
 ```````````````````````````
@@ -92,9 +155,11 @@ to your profile:
 Even if you don't pass any information to this function it will still report
 your current gateway's MAC address. This saves me from having to document the
 shell commands needed to do the same thing :-). Run the ``dwim`` command and
-take note of a line that looks like this::
+take note of a line that looks like this:
 
-  We're not connected to a known network (unknown gateway MAC address 84:9c:a6:76:23:8e).
+.. code-block:: none
+
+   We're not connected to a known network (unknown gateway MAC address 84:9c:a6:76:23:8e).
 
 Now edit your profile and change the line you just added:
 
@@ -102,9 +167,11 @@ Now edit your profile and change the line you just added:
 
    location = determine_network_location(home=['84:9c:a6:76:23:8e'])
 
-When you now rerun ``dwim`` it will say::
+When you now rerun ``dwim`` it will say:
 
-  We're connected to the home network.
+.. code-block:: none
+
+   We're connected to the home network.
 
 So what did we just do? We took note of the current gateway's MAC address and
 associated that MAC address with a location named "home". In our profile we can
@@ -229,7 +296,7 @@ example of Do What I Mean if you ask me :-)
 Contact
 -------
 
-The latest version of ``dwim`` is available on PyPI_ and GitHub_. The
+The latest version of `dwim` is available on PyPI_ and GitHub_. The
 documentation is hosted on `Read the Docs`_. For bug reports please create an
 issue on GitHub_. If you have questions, suggestions, etc. feel free to send me
 an e-mail at `peter@peterodding.com`_.
@@ -250,6 +317,7 @@ This software is licensed under the `MIT license`_.
 .. _MAC address: http://en.wikipedia.org/wiki/MAC_address
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
 .. _network gateway: http://en.wikipedia.org/wiki/Gateway_(telecommunications)
+.. _per user site-packages directory: https://www.python.org/dev/peps/pep-0370/
 .. _Perl: http://en.wikipedia.org/wiki/Perl
 .. _peter@peterodding.com: peter@peterodding.com
 .. _Pidgin: http://en.wikipedia.org/wiki/Pidgin_(software)
@@ -257,3 +325,4 @@ This software is licensed under the `MIT license`_.
 .. _Python: http://en.wikipedia.org/wiki/Python_(programming_language)
 .. _Read the Docs: https://dwim.readthedocs.io/en/latest/
 .. _the documentation: https://dwim.readthedocs.io/en/latest/#function-reference
+.. _virtual environments: http://docs.python-guide.org/en/latest/dev/virtualenvs/

@@ -1,24 +1,29 @@
 # dwim: Location aware application launcher.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: May 8, 2017
+# Last Change: May 29, 2017
 # URL: https://dwim.readthedocs.io
-#
-# This is the Sphinx configuration file to generate documentation for the
-# `dwim' Python package.
+
+"""Sphinx documentation configuration for the `dwim` package."""
 
 import os
 import sys
 
-# Add the source distribution root directory to the Python module search path.
-docs_directory = os.path.dirname(os.path.abspath(__file__))
-root_directory = os.path.dirname(docs_directory)
-sys.path.insert(0, root_directory)
+# Add the dwim source distribution's root directory to the module path.
+sys.path.insert(0, os.path.abspath(os.pardir))
 
 # -- General configuration -----------------------------------------------------
 
 # Sphinx extension module names.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.viewcode',
+    'humanfriendly.sphinx',
+]
+
+# Sort members by the source order instead of alphabetically.
+autodoc_member_order = 'bysource'
 
 # Paths that contain templates, relative to this directory.
 templates_path = ['templates']
@@ -38,7 +43,7 @@ copyright = u'2017, Peter Odding'
 # built documents.
 
 # Find the package version and make it the release.
-from dwim import __version__ as dwim_version
+from dwim import __version__ as dwim_version  # noqa
 
 # The short X.Y version.
 version = '.'.join(dwim_version.split('.')[:2])
@@ -62,13 +67,16 @@ pygments_style = 'sphinx'
 
 # Refer to the Python standard library.
 # From: http://twistedmatrix.com/trac/ticket/4582.
-intersphinx_mapping = {'python': ('http://docs.python.org', None)}
+intersphinx_mapping = dict(
+    python=('https://docs.python.org/2', None),
+    humanfriendly=('https://humanfriendly.readthedocs.io/en/latest', None),
+)
 
 # -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'nature'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'executordoc'
+htmlhelp_basename = 'dwimdoc'

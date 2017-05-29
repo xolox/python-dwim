@@ -1,23 +1,19 @@
 # dwim: Location aware application launcher.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: May 8, 2017
+# Last Change: May 29, 2017
 # URL: https://dwim.readthedocs.io
+
+"""dwim: Location aware application launcher."""
 
 # Standard library modules.
 import functools
-import getopt
 import os
 import random
 import shlex
-import sys
-import time
-
-# Semi-standard module versioning.
-__version__ = '0.2'
 
 # External dependencies.
-import coloredlogs
+from humanfriendly import Spinner, Timer, format_path, pluralize
 from executor import execute, which, quote
 from verboselogs import VerboseLogger
 
@@ -27,78 +23,37 @@ try:
 except ImportError:
     from flufl.enum import Enum
 
+# Modules included in our package.
+from dwim.exceptions import CommandParseError, MissingProgramError
+
+# Semi-standard module versioning.
+__version__ = '0.3'
+
 # Initialize a logger for this module.
 logger = VerboseLogger(__name__)
+
+# Bind the execute() function to our logger.
 execute = functools.partial(execute, logger=logger)
 
-
-def main():
-    """Command line interface for the ``dwim`` program."""
-    # Initialize logging to the terminal.
-    coloredlogs.install()
-    # Define the command line option defaults.
-    profile = '~/.dwimrc'
-    # Parse the command line arguments.
-    try:
-        options, _ = getopt.getopt(sys.argv[1:], 'c:vqh', ['config=', 'verbose', 'quiet', 'help'])
-        for option, value in options:
-            if option in ('-c', '--config'):
-                profile = value
-            elif option in ('-v', '--verbose'):
-                coloredlogs.increase_verbosity()
-            elif option in ('-q', '--quiet'):
-                coloredlogs.decrease_verbosity()
-            elif option in ('-h', '--help'):
-                usage()
-                sys.exit(0)
-    except Exception:
-        logger.exception("Failed to parse command line arguments!")
-        sys.exit(1)
-    # Execute the requested action(s).
-    try:
-        logger.info("Initializing dwim %s ..", __version__)
-        # Load the user's profile script.
-        filename = os.path.expanduser(profile)
-        environment = dict(__file__=filename,
-                           __name__='dwimrc',
-                           launch_program=launch_program,
-                           LaunchStatus=LaunchStatus,
-                           set_random_background=set_random_background,
-                           wait_for_internet_connection=wait_for_internet_connection)
-        logger.info("Loading %s ..", filename)
-        execfile(filename, environment, environment)
-    except Exception:
-        logger.exception("Caught a fatal exception! Terminating ..")
-        sys.exit(1)
+DEFAULT_PROFILE = '~/.dwimrc'
+"""The default location of the user's profile script (a string)."""
 
 
-def usage():
-    """Print a user friendly usage message to the terminal."""
-    print("""
-Usage: dwim [OPTIONS]
-
-The dwim program is a location aware application launcher. To use it you are
-required to create a profile at ~/.dwimrc. This profile is a simple Python
-script that defines which applications you want to start automatically, in
-which order the applications should start and whether some applications should
-only be started given a specific physical location.
-
-The location awareness works by checking the MAC address of your gateway (the
-device on your network that connects you to the outside world, usually a
-router) to a set of known MAC addresses that you define in ~/.dwimrc.
-
-Every time you run the dwim program your ~/.dwimrc profile is evaluated and
-your applications are started automatically. If you run dwim again it will not
-start duplicate instances of your applications, but when you quit an
-application and then rerun dwim the application will be started again.
-
-Supported options:
-
-  -c, --config=FILE  override profile location
-  -v, --verbose      make more noise
-  -q, --quiet        make less noise
-  -h, --help         show this message and exit
-""".strip())
+def dwim(profile=DEFAULT_PROFILE):
+    """Evaluate the user's profile script."""
+    logger.info("Initializing dwim %s ..", __version__)
+    filename = os.path.expanduser(profile)
+    environment = dict(
+        __file__=filename,
+        __name__='dwimrc',
+        determine_network_location=determine_network_location,
+        launch_program=launch_program,
+        LaunchStatus=LaunchStatus,
+        set_random_background=set_random_background,
+        wait_for_internet_connection=wait_for_internet_connection,
+    )
+    logger.info("Loading %s ..", format_path(filename))
+    execfile(filename, environment, environment)
 
 
 def launch_program(command, is_running=None):
@@ -112,7 +67,7 @@ def launch_program(command, is_running=None):
     :param command: The shell command used to launch the application (a string).
     :param is_running: The shell command used to check whether the application
                        is already running (a string, optional).
-    :returns: One of the values from the :py:class:`LaunchStatus` enumeration.
+    :returns: One of the values from the :class:`LaunchStatus` enumeration.
 
     Examples of custom "is running" checks:
 
@@ -150,33 +105,23 @@ def launch_program(command, is_running=None):
 class LaunchStatus(Enum):
 
     """
-    The :py:class:`LaunchStatus` enumeration defines the possible results of
-    :py:func:`launch_program()`. It enables the caller to handle the possible
-    results when they choose to do so, without forcing them to handle
-    exceptions.
+    :class:`LaunchStatus` enumerates the possible results of :func:`launch_program()`.
 
-    .. data:: started
-
-    The program wasn't running before but has just been started.
-
-    .. data:: already_running
-
-    The program was already running.
-
-    .. data:: not_installed
-
-    The program is not installed / available on the ``$PATH``.
-
-    .. data:: unspecified_error
-
-    Any other type of error, e.g. the command line given to
-    :py:func:`launch_program()` can't be parsed.
+    It enables the caller to handle the possible results when they choose to do
+    so, without forcing them to handle exceptions.
     """
 
     started = 1
+    """The program wasn't running before but has just been started."""
+
     already_running = 2
+    """The program was already running."""
+
     not_installed = 3
+    """The program is not installed / available on the ``$PATH``."""
+
     unspecified_error = 4
+    """Any other type of error, e.g. the command line can't be parsed."""
 
 
 def extract_program(command_line):
@@ -185,7 +130,7 @@ def extract_program(command_line):
 
     :param command_line: A shell command (a string).
     :returns: The program name (a string).
-    :raises: :py:exc:`CommandParseError` when the command line cannot be parsed.
+    :raises: :exc:`.CommandParseError` when the command line cannot be parsed.
 
     Some examples:
 
@@ -208,7 +153,7 @@ def resolve_program(executable):
 
     :param executable: The name of a program (a string).
     :returns: The absolute pathname of the program (a string).
-    :raises: :py:exc:`MissingProgramError` when the program doesn't exist.
+    :raises: :exc:`.MissingProgramError` when the program doesn't exist.
 
     An example:
 
@@ -241,17 +186,20 @@ def set_random_background(command, directory):
                     ``{image}`` marker).
     :param directory: The pathname of a directory containing wallpapers (a
                       string).
+    :raises: :exc:`~exceptions.ValueError` when the `command` string doesn't
+             contain an ``{image}`` placeholder.
     """
-    assert '{image}' in command, "The 1st argument should contain an {image} marker!"
+    if '{image}' not in command:
+        raise ValueError("The 1st argument should contain an {image} marker!")
     backgrounds = []
     logger.verbose("Searching for desktop backgrounds in %s ..", directory)
     for root, dirs, files in os.walk(directory):
         for filename in files:
             if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
                 backgrounds.append(os.path.join(root, filename))
-    logger.verbose("Found %i desktop backgrounds.", len(backgrounds))
+    logger.verbose("Found %s.", pluralize(len(backgrounds), "desktop background"))
     selected_background = random.choice(backgrounds)
-    logger.info("Selected random background: %s", selected_background)
+    logger.info("Selected random background: %s", format_path(selected_background))
     execute(command.format(image=quote(selected_background)))
 
 
@@ -280,18 +228,21 @@ def determine_network_location(**gateways):
                                                      '00:18:8B:F8:AF:33'])
     """
     current_gateway_mac = find_gateway_mac()
-    for network_name, known_gateways in gateways.items():
-        if any(current_gateway_mac.upper() == gateway.upper() for gateway in known_gateways):
-            logger.info("We're connected to the %s network.", network_name)
-            return network_name
-    logger.info("We're not connected to a known network (unknown gateway MAC address %s).", current_gateway_mac)
+    if current_gateway_mac:
+        for network_name, known_gateways in gateways.items():
+            if any(current_gateway_mac.upper() == gateway.upper() for gateway in known_gateways):
+                logger.info("We're connected to the %s network.", network_name)
+                return network_name
+        logger.info("We're not connected to a known network (unknown gateway MAC address %s).", current_gateway_mac)
+    else:
+        logger.info("Failed to determine gateway, assuming network connection is down.")
 
 
 def find_gateway_address():
     """
     Find the IP address of the current gateway using the ``ip route`` command.
 
-    :returns: The IP address of the gateway (a string) or ``None``.
+    :returns: The IP address of the gateway (a string) or :data:`None`.
 
     An example:
 
@@ -341,20 +292,29 @@ def wait_for_internet_connection():
     public DNS IPv4 addresses) and returning as soon as a ping request gets a
     successful response. The ping interval and timeout is one second.
     """
+    timer = Timer()
     logger.info("Checking internet connection ..")
-    while not execute('ping -c1 -w1 8.8.8.8', silent=True, check=False):
-        logger.info("Not connected yet, retrying in a second ..")
-        time.sleep(1)
-    logger.info("Internet connection is ready.")
+    if have_internet_connection():
+        logger.info("We're already connected!")
+    else:
+        logger.info("We're not connected yet, waiting ..")
+        with Spinner(label="Waiting for internet connection", timer=timer) as spinner:
+            while not have_internet_connection():
+                spinner.step()
+                spinner.sleep()
+        logger.info("Internet connection is now ready (waited %s).", timer)
 
 
-class ProgramError(Exception):
-    """Super class for exceptions raised in :py:func:`launch_program()`."""
+def have_internet_connection():
+    """
+    Check if an internet connection is available.
 
+    :returns: :data:`True` if an internet connection is available,
+              :data:`False` otherwise.
 
-class CommandParseError(ProgramError):
-    """Raised by :py:func:`extract_program()` when a program doesn't exist."""
-
-
-class MissingProgramError(ProgramError):
-    """Raised by :py:func:`resolve_program()` when a program doesn't exist."""
+    This works by pinging 8.8.8.8 which is one of `Google's public DNS servers
+    <https://developers.google.com/speed/public-dns/>`_. This IP address was
+    chosen because it is documented that Google uses anycast to keep this IP
+    address available at all times.
+    """
+    return execute('ping', '-c1', '-w1', '8.8.8.8', check=False, silent=True)
